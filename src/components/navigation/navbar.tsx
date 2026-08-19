@@ -72,15 +72,20 @@ export default function Navbar() {
     };
   }, [dropdownOpen]);
 
-  const handleLogout = async () => {
+  const handleLogout = async (e: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     try {
       await fetch("/api/auth/logout", { method: "POST" });
       setUser(null);
       setDropdownOpen(false);
       setMobileMenuOpen(false);
-      router.push("/");
-      router.refresh();
-    } catch {}
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Logout error", err);
+    }
   };
 
   const handleScroll = (id: string) => {
@@ -209,18 +214,10 @@ export default function Navbar() {
                     </div>
 
                     <div className="py-1">
-                      <a
-                        href="/api/auth/github"
-                        className="block px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors"
-                      >
-                        Connect GitHub
-                      </a>
-                    </div>
-
-                    <div className="py-1">
                       <button
+                        type="button"
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-xs font-mono text-gray-400 hover:text-red-400 hover:bg-[#17212B]/40 transition-colors cursor-pointer bg-transparent border-0"
+                        className="w-full text-left px-4 py-2 text-xs font-mono text-gray-400 hover:text-red-400 hover:bg-[#17212B]/40 transition-colors cursor-pointer bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-red-400/20"
                       >
                         Sign out
                       </button>
@@ -277,18 +274,10 @@ export default function Navbar() {
                     </div>
 
                     <div className="py-1">
-                      <a
-                        href="/api/auth/github"
-                        className="block px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors"
-                      >
-                        Connect GitHub
-                      </a>
-                    </div>
-
-                    <div className="py-1">
                       <button
+                        type="button"
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-xs font-mono text-gray-400 hover:text-red-400 hover:bg-[#17212B]/40 transition-colors cursor-pointer bg-transparent border-0"
+                        className="w-full text-left px-4 py-2 text-xs font-mono text-gray-400 hover:text-red-400 hover:bg-[#17212B]/40 transition-colors cursor-pointer bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-red-400/20"
                       >
                         Sign out
                       </button>
