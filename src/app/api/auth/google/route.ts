@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export async function GET() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -18,9 +19,8 @@ export async function GET() {
     redirectUri
   )}&response_type=code&scope=openid%20profile%20email&state=${state}`;
 
-  const response = NextResponse.redirect(googleAuthUrl);
-
-  response.cookies.set("google_oauth_state", state, {
+  const cookieStore = await cookies();
+  cookieStore.set("google_oauth_state", state, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -28,5 +28,5 @@ export async function GET() {
     maxAge: 60 * 10, // 10 minutes
   });
 
-  return response;
+  return NextResponse.redirect(googleAuthUrl);
 }

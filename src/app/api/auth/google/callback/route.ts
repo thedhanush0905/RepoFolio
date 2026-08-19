@@ -10,9 +10,13 @@ export async function GET(request: NextRequest) {
 
   const savedState = request.cookies.get("google_oauth_state")?.value;
 
+  console.log("[Google Callback] Incoming state:", state);
+  console.log("[Google Callback] Cookie savedState:", savedState);
+  console.log("[Google Callback] All request cookies:", Array.from(request.cookies.getAll()).map(c => `${c.name}=${c.value}`));
+
   // CSRF validation check
   if (!state || !savedState || state !== savedState) {
-    return NextResponse.json({ error: "Invalid OAuth state." }, { status: 400 });
+    return NextResponse.json({ error: `Invalid OAuth state. Expected ${savedState}, got ${state}` }, { status: 400 });
   }
 
   if (!code) {

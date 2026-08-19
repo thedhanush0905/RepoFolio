@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
+import { cookies } from "next/headers";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -24,9 +25,8 @@ export async function GET() {
     redirectUri || ""
   )}&state=${state}&scope=repo,user`;
 
-  const response = NextResponse.redirect(githubAuthUrl);
-
-  response.cookies.set("oauth_state", state, {
+  const cookieStore = await cookies();
+  cookieStore.set("oauth_state", state, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -34,5 +34,5 @@ export async function GET() {
     maxAge: 60 * 10, // 10 minutes
   });
 
-  return response;
+  return NextResponse.redirect(githubAuthUrl);
 }
