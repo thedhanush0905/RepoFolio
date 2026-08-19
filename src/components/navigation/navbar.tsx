@@ -181,12 +181,6 @@ export default function Navbar() {
                     </div>
 
                     <div className="py-1">
-                      <button
-                        onClick={() => handleScroll("saved-drafts")}
-                        className="w-full text-left px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors cursor-pointer bg-transparent border-0"
-                      >
-                        Saved Drafts
-                      </button>
                       <a
                         href="/api/auth/github"
                         className="block px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors"
@@ -255,12 +249,6 @@ export default function Navbar() {
                     </div>
 
                     <div className="py-1">
-                      <button
-                        onClick={() => handleScroll("saved-drafts")}
-                        className="w-full text-left px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors cursor-pointer bg-transparent border-0"
-                      >
-                        Saved Drafts
-                      </button>
                       <a
                         href="/api/auth/github"
                         className="block px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors"
