@@ -419,7 +419,7 @@ export default function Navbar() {
           </Link>
         </div>
       )}
-      <EasterEggModal isOpen={easterEggOpen} onClose={() => setEasterEggOpen(false)} />
+      <EasterEggModal isOpen={easterEggOpen} onClose={() => setEasterEggOpen(false)} user={user} />
     </>
   );
 }
@@ -427,24 +427,30 @@ export default function Navbar() {
 interface EasterEggModalProps {
   isOpen: boolean;
   onClose: () => void;
+  user: UserProfile | null;
 }
 
-function EasterEggModal({ isOpen, onClose }: EasterEggModalProps) {
+function EasterEggModal({ isOpen, onClose, user }: EasterEggModalProps) {
   const [lines, setLines] = useState<string[]>([]);
   const [activeLine, setActiveLine] = useState("");
   const modalRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
   const script = [
-    "REPOfolio Terminal",
+    "REPOfolio Shell v0.1.0",
     "",
-    "$ whoami",
-    "> curious developer",
+    "$ repofolio status",
+    `PORTFOLIO ............. READY${user ? ` (${user.name})` : ""}`,
+    "SOURCE CODE ........... GENERATED",
+    `REPOSITORY ............ ${user?.githubConnected ? `CONNECTED (@${user.githubUsername})` : "DISCONNECTED"}`,
+    `DEPLOYMENT ............ ${user?.githubConnected ? "LIVE" : "PENDING"}`,
     "",
-    "$ cat /secret",
-    "> You found it.",
+    "$ git status",
+    "✓ portfolio is looking good.",
     "",
-    "> Now go ship something."
+    "$ ship",
+    "",
+    "> Your portfolio is ready to leave localhost."
   ];
 
   useEffect(() => {
@@ -547,6 +553,8 @@ function EasterEggModal({ isOpen, onClose }: EasterEggModalProps) {
                   ? "text-[#F3F0E8] font-bold" 
                   : l.startsWith(">") 
                   ? "text-[#E5A84B]" 
+                  : l.startsWith("✓") 
+                  ? "text-green-400" 
                   : i === 0 
                   ? "text-[#F3F0E8] font-semibold text-sm mb-2" 
                   : "text-gray-500"
@@ -562,6 +570,8 @@ function EasterEggModal({ isOpen, onClose }: EasterEggModalProps) {
                   ? "text-[#F3F0E8] font-bold" 
                   : activeLine.startsWith(">") 
                   ? "text-[#E5A84B]" 
+                  : activeLine.startsWith("✓") 
+                  ? "text-green-400" 
                   : lines.length === 0 
                   ? "text-[#F3F0E8] font-semibold text-sm mb-2" 
                   : "text-gray-500"
