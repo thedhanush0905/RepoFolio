@@ -88,6 +88,21 @@ export default function Navbar() {
     }
   };
 
+  const handleDisconnectGitHub = async (e: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    try {
+      const res = await fetch("/api/auth/github/disconnect", { method: "POST" });
+      if (res.ok) {
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error("Disconnect GitHub error", err);
+    }
+  };
+
   const handleScroll = (id: string) => {
     setMobileMenuOpen(false);
     setDropdownOpen(false);
@@ -147,14 +162,6 @@ export default function Navbar() {
                 Saved Drafts
               </button>
             )}
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono"
-            >
-              GitHub
-            </a>
 
             <span className="h-4 w-[1px] bg-[#17212B]" />
 
@@ -211,6 +218,29 @@ export default function Navbar() {
                         <span className="text-xs font-bold text-[#F3F0E8] truncate font-mono">{user.name}</span>
                         <span className="text-[10px] text-gray-500 truncate font-mono">{user.email}</span>
                       </div>
+                    </div>
+
+                    <div className="py-1">
+                      {user.githubConnected ? (
+                        <div className="px-4 py-2 flex flex-col gap-1 min-w-0">
+                          <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">GitHub Connected</span>
+                          <span className="text-xs font-mono text-[#E5A84B] truncate">@{user.githubUsername}</span>
+                          <button
+                            type="button"
+                            onClick={handleDisconnectGitHub}
+                            className="text-left text-[10px] font-mono text-red-400 hover:text-red-300 underline cursor-pointer mt-1 bg-transparent border-0 p-0 focus:outline-none"
+                          >
+                            Disconnect
+                          </button>
+                        </div>
+                      ) : (
+                        <a
+                          href="/api/auth/github"
+                          className="block px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors"
+                        >
+                          Connect GitHub
+                        </a>
+                      )}
                     </div>
 
                     <div className="py-1">
@@ -274,6 +304,29 @@ export default function Navbar() {
                     </div>
 
                     <div className="py-1">
+                      {user.githubConnected ? (
+                        <div className="px-4 py-2 flex flex-col gap-1 min-w-0">
+                          <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">GitHub Connected</span>
+                          <span className="text-xs font-mono text-[#E5A84B] truncate">@{user.githubUsername}</span>
+                          <button
+                            type="button"
+                            onClick={handleDisconnectGitHub}
+                            className="text-left text-[10px] font-mono text-red-400 hover:text-red-300 underline cursor-pointer mt-1 bg-transparent border-0 p-0 focus:outline-none"
+                          >
+                            Disconnect
+                          </button>
+                        </div>
+                      ) : (
+                        <a
+                          href="/api/auth/github"
+                          className="block px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors"
+                        >
+                          Connect GitHub
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="py-1">
                       <button
                         type="button"
                         onClick={handleLogout}
@@ -327,14 +380,6 @@ export default function Navbar() {
               Saved Drafts
             </button>
           )}
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-lg font-mono text-[#A8AAA4] hover:text-[#F3F0E8]"
-          >
-            GitHub
-          </a>
           <hr className="border-[#17212B]" />
           {!user && (
             <Link
