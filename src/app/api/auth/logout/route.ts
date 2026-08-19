@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { deleteSessionCookie } from "@/lib/session";
+import { cookies } from "next/headers";
 
 export async function POST() {
-  const response = NextResponse.json({ success: true });
-  deleteSessionCookie(response);
-  // Also clear any legacy github cookie if set
-  response.cookies.set("gh_token", "", { path: "/", maxAge: 0 });
-  return response;
+  const cookieStore = await cookies();
+  
+  // Set expiration in past to force deletion
+  cookieStore.set("session_token", "", { path: "/", maxAge: 0 });
+  cookieStore.set("gh_token", "", { path: "/", maxAge: 0 });
+  
+  return NextResponse.json({ success: true });
 }

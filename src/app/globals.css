@@ -1,37 +1,51 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #101820;
-  --bg-secondary: #17212B;
-  --bg-terminal: #0B1117;
+  /* Design system tokens (Dark Theme - default) */
+  --background: #101820;
+  --foreground: #F3F0E8;
+  --surface: #17212B;
+  --surface-elevated: #0B1117;
+  --surface-muted: #0B1117;
+  --border: #17212B;
+  --border-strong: #2b3b4d;
   --text-primary: #F3F0E8;
   --text-secondary: #A8AAA4;
-  --border-color: #17212B;
+  --text-muted: #59636E;
   --accent: #E5A84B;
-  --portfolio-bg: #E8E2D5;
+  --input-bg: #0B1117;
+  --grid-color: rgba(168, 170, 164, 0.04);
 }
 
 body {
-  background-color: var(--bg-primary);
+  background-color: var(--background);
   color: var(--text-primary);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Light Theme Variables */
 .light {
-  --bg-primary: #F7F5EF;
-  --bg-secondary: #FFFFFF;
-  --bg-terminal: #FFFFFF;
+  /* Design system tokens (Light Theme) */
+  --background: #F7F5EF;
+  --foreground: #111827;
+  --surface: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-muted: #F0ECE1;
+  --border: #D9DDE1;
+  --border-strong: #B0B5B9;
   --text-primary: #111827;
   --text-secondary: #59636E;
-  --border-color: #D9DDE1;
+  --text-muted: #8C96A0;
+  --input-bg: #FFFFFF;
+  --grid-color: rgba(89, 99, 110, 0.05);
 
   /* Class overrides for elements with hardcoded Tailwind colors */
   
   /* Background overrides */
-  .bg-\[\#101820\] { background-color: #F7F5EF !important; }
-  .bg-\[\#17212B\] { background-color: #FFFFFF !important; }
-  .bg-\[\#0B1117\] { background-color: #FFFFFF !important; }
+  .bg-\[\#101820\] { background-color: var(--background) !important; }
+  .bg-\[\#17212B\] { background-color: var(--surface) !important; }
+  .bg-\[\#0B1117\] { background-color: var(--surface-elevated) !important; }
+  .bg-\[\#070c11\] { background-color: var(--background) !important; }
   
   /* Translucent backgrounds */
   .bg-\[\#101820\]\/90 { background-color: rgba(247, 245, 239, 0.9) !important; }
@@ -43,40 +57,55 @@ body {
   .bg-\[\#1e2a36\] { background-color: rgba(217, 221, 225, 0.2) !important; }
 
   /* Text overrides */
-  .text-\[\#F3F0E8\] { color: #111827 !important; }
-  .text-\[\#A8AAA4\] { color: #59636E !important; }
+  .text-\[\#F3F0E8\] { color: var(--text-primary) !important; }
+  .text-\[\#A8AAA4\] { color: var(--text-secondary) !important; }
   .text-\[\#A8AAA4\]\/60 { color: rgba(89, 99, 110, 0.6) !important; }
   .text-\[\#A8AAA4\]\/30 { color: rgba(89, 99, 110, 0.3) !important; }
-  .text-gray-500 { color: #59636E !important; }
-  .text-gray-400 { color: #59636E !important; }
-  .text-gray-300 { color: #111827 !important; }
+  .text-gray-500 { color: var(--text-secondary) !important; }
+  .text-gray-400 { color: var(--text-secondary) !important; }
+  .text-gray-300 { color: var(--text-primary) !important; }
   
   /* Border overrides */
-  .border-\[\#17212B\] { border-color: #D9DDE1 !important; }
-  .border-\[\#2b3b4d\]\/40 { border-color: #D9DDE1 !important; }
-  .border-\[\#2b3b4d\]\/60 { border-color: #D9DDE1 !important; }
-  .border-\[\#2b3b4d\]\/50 { border-color: #D9DDE1 !important; }
+  .border-\[\#17212B\] { border-color: var(--border) !important; }
+  .border-\[\#2b3b4d\]\/40 { border-color: var(--border) !important; }
+  .border-\[\#2b3b4d\]\/60 { border-color: var(--border-strong) !important; }
+  .border-\[\#2b3b4d\]\/50 { border-color: var(--border-strong) !important; }
   .border-\[\#2b3b4d\]\/20 { border-color: rgba(217, 221, 225, 0.3) !important; }
   .border-\[\#2b3b4d\]\/30 { border-color: rgba(217, 221, 225, 0.4) !important; }
-  .border-white\/10 { border-color: #D9DDE1 !important; }
+  .border-white\/10 { border-color: var(--border) !important; }
   .border-white\/5 { border-color: rgba(217, 221, 225, 0.5) !important; }
   
   /* Scrollbar override */
   ::-webkit-scrollbar-thumb {
-    background: #D9DDE1 !important;
+    background: var(--border) !important;
   }
   
   /* Dividers */
-  .divide-\[\#17212B\]\/60 > :not([hidden]) ~ :not([hidden]) { border-color: #D9DDE1 !important; }
-  .divide-y > :not([hidden]) ~ :not([hidden]) { border-color: #D9DDE1 !important; }
-  hr { border-color: #D9DDE1 !important; }
+  .divide-\[\#17212B\]\/60 > :not([hidden]) ~ :not([hidden]) { border-color: var(--border) !important; }
+  .divide-y > :not([hidden]) ~ :not([hidden]) { border-color: var(--border) !important; }
+  hr { border-color: var(--border) !important; }
+}
+
+@theme {
+  --color-app-bg: var(--background);
+  --color-app-fg: var(--foreground);
+  --color-app-surface: var(--surface);
+  --color-app-elevated: var(--surface-elevated);
+  --color-app-muted: var(--surface-muted);
+  --color-app-border: var(--border);
+  --color-app-border-strong: var(--border-strong);
+  --color-app-primary: var(--text-primary);
+  --color-app-secondary: var(--text-secondary);
+  --color-app-muted-text: var(--text-muted);
+  --color-app-accent: var(--accent);
+  --color-app-input: var(--input-bg);
 }
 
 /* Custom subtle grid background overlay */
 .grid-bg {
   background-image: 
-    linear-gradient(to right, rgba(168, 170, 164, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(168, 170, 164, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
@@ -86,10 +115,10 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-terminal);
+  background: var(--surface-elevated);
 }
 ::-webkit-scrollbar-thumb {
-  background: #2b3b4d;
+  background: var(--border-strong);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -99,7 +128,7 @@ body {
 /* Selection highlight */
 ::selection {
   background-color: var(--accent);
-  color: var(--bg-terminal);
+  color: var(--surface-elevated);
 }
 
 /* Hide scrollbar utility */
