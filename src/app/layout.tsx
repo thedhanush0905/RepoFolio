@@ -41,6 +41,28 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${ibmPlexSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (!theme) {
+                    var mql = window.matchMedia('(prefers-color-scheme: light)');
+                    theme = mql.matches ? 'light' : 'dark';
+                  }
+                  if (theme === 'light') {
+                    document.documentElement.classList.add('light');
+                  } else {
+                    document.documentElement.classList.remove('light');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full bg-[#101820] text-[#F3F0E8] font-sans selection:bg-[#E5A84B] selection:text-[#0B1117] flex flex-col">
         {children}
       </body>

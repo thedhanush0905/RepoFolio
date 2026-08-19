@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, X, Terminal } from "lucide-react";
+import { Menu, X, Terminal, Sun, Moon } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -19,7 +19,25 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const isLight = document.documentElement.classList.contains("light");
+    setTheme(isLight ? "light" : "dark");
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    if (newTheme === "light") {
+      document.documentElement.classList.add("light");
+      localStorage.setItem("theme", "light");
+    } else {
+      document.documentElement.classList.remove("light");
+      localStorage.setItem("theme", "dark");
+    }
+  };
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -132,6 +150,16 @@ export default function Navbar() {
             >
               GitHub
             </a>
+
+            <span className="h-4 w-[1px] bg-[#17212B]" />
+
+            <button
+              onClick={toggleTheme}
+              className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors p-2 bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#E5A84B]/40 rounded-sm"
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-[#E5A84B]" /> : <Moon className="w-4 h-4 text-[#E5A84B]" />}
+            </button>
 
             <span className="h-4 w-[1px] bg-[#17212B]" />
 
@@ -269,6 +297,13 @@ export default function Navbar() {
                 )}
               </div>
             )}
+            <button
+              onClick={toggleTheme}
+              className="text-[#A8AAA4] hover:text-[#F3F0E8] p-2 bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#E5A84B]/40 rounded-sm"
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+            >
+              {theme === "dark" ? <Sun className="w-4.5 h-4.5 text-[#E5A84B]" /> : <Moon className="w-4.5 h-4.5 text-[#E5A84B]" />}
+            </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-[#A8AAA4] hover:text-[#F3F0E8] p-2 bg-transparent border-0"

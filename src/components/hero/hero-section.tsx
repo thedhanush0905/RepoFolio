@@ -259,7 +259,7 @@ export default function HeroSection() {
 
           {/* Right: Interactive Product Demonstration */}
           <div className="lg:col-span-7 w-full">
-            <div className="bg-[#17212B] border border-[#2b3b4d]/60 rounded-sm overflow-hidden flex flex-col h-[520px]">
+            <div className="bg-[#17212B] border border-[#2b3b4d]/60 rounded-sm overflow-hidden flex flex-col h-[580px] md:h-[520px]">
               
               {/* Header bar */}
               <div className="bg-[#0B1117] px-4 py-3 border-b border-[#2b3b4d]/60 flex items-center justify-between">
@@ -293,7 +293,7 @@ export default function HeroSection() {
               <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden bg-[#101820]">
                 
                 {/* Left col: Form Builder mock */}
-                <div className="md:col-span-5 border-r border-[#2b3b4d]/40 p-4 font-mono text-xs flex flex-col justify-between overflow-y-auto">
+                <div className="md:col-span-5 border-b md:border-b-0 md:border-r border-[#2b3b4d]/40 p-4 font-mono text-xs flex flex-col justify-between overflow-y-auto">
                   <div>
                     <div className="text-[10px] text-[#A8AAA4] uppercase tracking-wider mb-4 font-bold">
                       [PORTFOLIO BUILDER]
