@@ -147,6 +147,7 @@ export default function Navbar() {
                     <img
                       src={user.avatarUrl}
                       alt={user.name}
+                      referrerPolicy="no-referrer"
                       className="w-7 h-7 rounded-full object-cover border border-[#2b3b4d]/40"
                     />
                   ) : (
@@ -165,6 +166,7 @@ export default function Navbar() {
                         <img
                           src={user.avatarUrl}
                           alt={user.name}
+                          referrerPolicy="no-referrer"
                           className="w-9 h-9 rounded-full object-cover border border-[#2b3b4d]/20"
                         />
                       ) : (
@@ -234,6 +236,7 @@ export default function Navbar() {
                     <img
                       src={user.avatarUrl}
                       alt={user.name}
+                      referrerPolicy="no-referrer"
                       className="w-7 h-7 rounded-full object-cover border border-[#2b3b4d]/40"
                     />
                   ) : (
