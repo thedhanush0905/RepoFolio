@@ -1,8 +1,28 @@
 import { cookies } from "next/headers";
+import { getSessionUserId } from "./session";
+import { connectToDatabase } from "./db";
+import User from "@/models/User";
+import { decrypt } from "./encryption";
 
 export async function getGitHubClientToken(): Promise<string | undefined> {
   const cookieStore = await cookies();
-  return cookieStore.get("gh_token")?.value;
+  const cookieToken = cookieStore.get("gh_token")?.value;
+  if (cookieToken) return cookieToken;
+
+  const userId = await getSessionUserId();
+  if (!userId) return undefined;
+
+  await connectToDatabase();
+  const user = await User.findById(userId);
+  if (user && user.githubToken) {
+    try {
+      return decrypt(user.githubToken);
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
 }
 
 export interface GitHubUser {

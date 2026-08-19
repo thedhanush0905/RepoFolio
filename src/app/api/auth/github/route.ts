@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
+import { getSessionUserId } from "@/lib/session";
 
 export async function GET() {
+  const userId = await getSessionUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized. Please log in first." }, { status: 401 });
+  }
+
   const clientId = process.env.GITHUB_CLIENT_ID;
   const redirectUri = process.env.GITHUB_REDIRECT_URI;
 

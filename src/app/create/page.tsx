@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PortfolioData, DHANUSH_MOCK_DATA, MAYA_CHEN_DATA, ARJUN_RAO_DATA, SARAH_WILLIAMS_DATA, NOAH_KIM_DATA } from "@/lib/constants";
 import PortfolioRenderer, { PortfolioTemplate } from "@/components/portfolio/portfolio-renderer";
 import { 
@@ -17,7 +18,8 @@ import {
   Github, 
   Check,
   RefreshCw,
-  Upload
+  Upload,
+  Save
 } from "lucide-react";
 
 interface PersonaConfig {
@@ -43,6 +45,7 @@ const TEMPLATES_LIST: { id: PortfolioTemplate; name: string }[] = [
 ];
 
 export default function CreatePortfolioPage() {
+  const router = useRouter();
   const [viewport, setViewport] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [selectedTemplate, setSelectedTemplate] = useState<PortfolioTemplate>("developer");
 
@@ -64,22 +67,55 @@ export default function CreatePortfolioPage() {
   const [githubUser, setGithubUser] = useState<{ login: string; avatarUrl?: string } | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Fetch authentication status on component mount
+  // Persistence states
+  const [portfolioId, setPortfolioId] = useState<string | null>(null);
+  const [portfolioName, setPortfolioName] = useState("My Portfolio");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Fetch authentication status and portfolio data on component mount
   React.useEffect(() => {
     fetch("/api/auth/me")
       .then((res) => res.json())
       .then((data) => {
         if (data.authenticated && data.user) {
-          setGithubUser(data.user);
+          if (data.user.githubConnected) {
+            setGithubUser({
+              login: data.user.githubUsername || "",
+              avatarUrl: data.user.avatarUrl || undefined,
+            });
+          }
+        } else {
+          router.push("/login");
         }
       })
       .catch(() => {})
       .finally(() => setCheckingAuth(false));
-  }, []);
 
-  const handleLogout = async () => {
+    // Check query params for existing portfolio ID
+    const queryId = new URLSearchParams(window.location.search).get("id");
+    if (queryId) {
+      setPortfolioId(queryId);
+      fetch(`/api/portfolios/${queryId}`)
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.success && result.portfolio) {
+            setPortfolioData(result.portfolio.data);
+            setSelectedTemplate(result.portfolio.template);
+            setPortfolioName(result.portfolio.name);
+            if (result.portfolio.repoUrl) {
+              setGeneratedRepoUrl(result.portfolio.repoUrl);
+              setGeneratedRepoFullName(result.portfolio.repoFullName || "");
+              setBuildState("deployed");
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [router]);
+
+  const handleDisconnectGitHub = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/auth/github/disconnect", { method: "POST" });
       setGithubUser(null);
     } catch {}
   };
@@ -223,9 +259,43 @@ export default function CreatePortfolioPage() {
     }));
   };
 
-  // State-driven Simulation runner
+  const handleSaveDraft = async () => {
+    try {
+      setActionLoading("save-draft");
+      let currentId = portfolioId;
+      const saveRes = await fetch(currentId ? `/api/portfolios/${currentId}` : "/api/portfolios", {
+        method: currentId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: portfolioName,
+          template: selectedTemplate,
+          data: portfolioData,
+          status: "draft",
+        }),
+      });
+
+      const saveData = await saveRes.json();
+      if (!saveRes.ok) {
+        throw new Error(saveData.error || "Failed to save draft.");
+      }
+
+      if (!currentId && saveData.portfolio) {
+        currentId = saveData.portfolio._id;
+        setPortfolioId(currentId);
+        const newUrl = `${window.location.pathname}?id=${currentId}`;
+        window.history.replaceState({ path: newUrl }, "", newUrl);
+      }
+      alert("Draft saved successfully!");
+    } catch (err: any) {
+      alert("Error saving draft: " + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // State-driven Simulation runner with database persistence integration
   const handleGenerate = async () => {
-    if (!githubUser) {
+    if (!githubUser || !githubUser.login) {
       setBuildState("error");
       setErrorMessage("Please connect your GitHub account before generating a repository.");
       return;
@@ -235,10 +305,36 @@ export default function CreatePortfolioPage() {
     setErrorMessage("");
 
     try {
+      // 1. Save or update the portfolio in the database with "generating" status
+      let currentId = portfolioId;
+      const saveRes = await fetch(currentId ? `/api/portfolios/${currentId}` : "/api/portfolios", {
+        method: currentId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: portfolioName,
+          template: selectedTemplate,
+          data: portfolioData,
+          status: "generating",
+        }),
+      });
+
+      const saveData = await saveRes.json();
+      if (!saveRes.ok) {
+        throw new Error(saveData.error || "Failed to save portfolio state.");
+      }
+
+      if (!currentId && saveData.portfolio) {
+        currentId = saveData.portfolio._id;
+        setPortfolioId(currentId);
+        const newUrl = `${window.location.pathname}?id=${currentId}`;
+        window.history.replaceState({ path: newUrl }, "", newUrl);
+      }
+
       // Simulate layout setup step first
       await new Promise((resolve) => setTimeout(resolve, 800));
       setBuildState("repositoryBuilding");
 
+      // 2. Build repository
       const response = await fetch("/api/github/repository", {
         method: "POST",
         headers: {
@@ -253,16 +349,41 @@ export default function CreatePortfolioPage() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
+        // Update portfolio status to failed in database
+        await fetch(`/api/portfolios/${currentId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "failed" }),
+        }).catch(() => {});
+        
         setBuildState("error");
         setErrorMessage(result.error || "Failed to generate repository.");
         return;
       }
+
+      // 3. Update portfolio status to published and save repo info
+      await fetch(`/api/portfolios/${currentId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "published",
+          repoUrl: result.repository.htmlUrl,
+          repoFullName: `${result.repository.owner}/${result.repository.name}`,
+        }),
+      }).catch(() => {});
 
       setGeneratedRepoUrl(result.repository.htmlUrl);
       setGeneratedRepoFullName(`${result.repository.owner}/${result.repository.name}`);
       setIsUpdateState(!!result.isUpdate);
       setBuildState("deployed");
     } catch (err: any) {
+      if (portfolioId) {
+        await fetch(`/api/portfolios/${portfolioId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "failed" }),
+        }).catch(() => {});
+      }
       setBuildState("error");
       setErrorMessage(err.message || "An unexpected error occurred during generation.");
     }
@@ -288,9 +409,26 @@ export default function CreatePortfolioPage() {
           <ArrowLeft className="w-4 h-4 text-[#E5A84B]" />
           <span>BACK TO HOME</span>
         </Link>
-        <span className="font-mono text-xs text-[#F3F0E8] font-bold">
-          REPOfolio Creator
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-xs text-[#F3F0E8] font-bold hidden sm:inline">
+            REPOfolio Creator:
+          </span>
+          <input
+            type="text"
+            value={portfolioName}
+            onChange={(e) => setPortfolioName(e.target.value)}
+            className="bg-[#101820] border border-[#2b3b4d]/40 text-[#F3F0E8] font-mono text-xs px-2 py-1 rounded-sm focus:outline-none focus:border-[#E5A84B] max-w-[150px]"
+            placeholder="Portfolio Name"
+          />
+          <button
+            onClick={handleSaveDraft}
+            disabled={actionLoading === "save-draft"}
+            className="flex items-center gap-1 bg-[#17212B] hover:bg-[#1e2a36] border border-[#2b3b4d]/40 text-gray-300 hover:text-white px-2.5 py-1 text-[9px] uppercase font-bold cursor-pointer rounded-sm transition-all disabled:opacity-50"
+          >
+            <Save className="w-3 h-3 text-[#E5A84B]" />
+            <span>Save Draft</span>
+          </button>
+        </div>
         <div className="flex items-center gap-4 text-xs font-mono text-[#A8AAA4]">
           {!checkingAuth && (
             <>
@@ -300,7 +438,7 @@ export default function CreatePortfolioPage() {
                     GITHUB CONNECTED: @{githubUser.login}
                   </span>
                   <button
-                    onClick={handleLogout}
+                    onClick={handleDisconnectGitHub}
                     className="bg-[#17212B] hover:bg-red-900/40 border border-[#2b3b4d]/40 text-gray-300 hover:text-white px-2.5 py-1 text-[9px] uppercase font-bold cursor-pointer rounded-sm transition-all"
                   >
                     Disconnect

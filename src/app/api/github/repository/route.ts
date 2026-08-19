@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { getAuthenticatedGitHubUser } from "@/lib/github-client";
+import { getAuthenticatedGitHubUser, getGitHubClientToken } from "@/lib/github-client";
 
 // Clean static template dependencies that can be compiled directly in the user's repository
 const TEMPLATE_COMPONENTS = {
@@ -388,8 +387,7 @@ export default function EditorialTemplate({ data }: EditorialTemplateProps) {
 };
 
 export async function POST(request: NextRequest) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("gh_token")?.value;
+  const token = await getGitHubClientToken();
 
   if (!token) {
     return NextResponse.json({ error: "Unauthorized. GitHub login required." }, { status: 401 });

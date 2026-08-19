@@ -1,11 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Menu, X, Terminal } from "lucide-react";
 
 export default function Navbar() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ name: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setUser(null);
+      router.push("/");
+      router.refresh();
+    } catch {}
+  };
 
   const handleScroll = (id: string) => {
     setMobileMenuOpen(false);
@@ -34,13 +57,13 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-6">
             <button
               onClick={() => handleScroll("how-it-works")}
-              className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono cursor-pointer"
+              className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono cursor-pointer bg-transparent border-0"
             >
               How it works
             </button>
             <button
               onClick={() => handleScroll("preview")}
-              className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono cursor-pointer"
+              className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono cursor-pointer bg-transparent border-0"
             >
               Preview
             </button>
@@ -55,11 +78,31 @@ export default function Navbar() {
 
             <span className="h-4 w-[1px] bg-[#17212B]" />
 
-            <button className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono cursor-pointer">
-              Sign in
-            </button>
+            {user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-[#A8AAA4] hover:text-red-400 transition-colors text-sm font-mono cursor-pointer bg-transparent border-0"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono"
+              >
+                Sign in
+              </Link>
+            )}
             <Link
-              href="/create"
+              href={user ? "/dashboard" : "/create"}
               className="bg-[#E5A84B] hover:bg-[#E5A84B]/90 text-[#0B1117] font-mono text-xs px-4 py-2 font-bold tracking-wide transition-all border border-transparent hover:border-[#E5A84B]/20 cursor-pointer"
             >
               Create portfolio
@@ -70,7 +113,7 @@ export default function Navbar() {
           <div className="flex md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-[#A8AAA4] hover:text-[#F3F0E8] p-2"
+              className="text-[#A8AAA4] hover:text-[#F3F0E8] p-2 bg-transparent border-0"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -84,13 +127,13 @@ export default function Navbar() {
         <div className="fixed inset-0 top-16 z-40 bg-[#101820] border-t border-[#17212B] flex flex-col p-6 space-y-6 md:hidden">
           <button
             onClick={() => handleScroll("how-it-works")}
-            className="text-left text-lg font-mono text-[#A8AAA4] hover:text-[#F3F0E8]"
+            className="text-left text-lg font-mono text-[#A8AAA4] hover:text-[#F3F0E8] bg-transparent border-0"
           >
             How it works
           </button>
           <button
             onClick={() => handleScroll("preview")}
-            className="text-left text-lg font-mono text-[#A8AAA4] hover:text-[#F3F0E8]"
+            className="text-left text-lg font-mono text-[#A8AAA4] hover:text-[#F3F0E8] bg-transparent border-0"
           >
             Preview
           </button>
@@ -103,11 +146,36 @@ export default function Navbar() {
             GitHub
           </a>
           <hr className="border-[#17212B]" />
-          <button className="text-left text-lg font-mono text-[#A8AAA4] hover:text-[#F3F0E8]">
-            Sign in
-          </button>
+          {user ? (
+            <>
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-left text-lg font-mono text-[#A8AAA4] hover:text-[#F3F0E8]"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="text-left text-lg font-mono text-[#A8AAA4] hover:text-red-400 bg-transparent border-0"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-left text-lg font-mono text-[#A8AAA4] hover:text-[#F3F0E8]"
+            >
+              Sign in
+            </Link>
+          )}
           <Link
-            href="/create"
+            href={user ? "/dashboard" : "/create"}
             onClick={() => setMobileMenuOpen(false)}
             className="bg-[#E5A84B] hover:bg-[#E5A84B]/90 text-[#0B1117] font-mono text-center font-bold py-3 tracking-wide"
           >
