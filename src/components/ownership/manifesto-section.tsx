@@ -13,16 +13,16 @@ export default function ManifestoSection() {
       const isVisible = rect.top < window.innerHeight && rect.bottom >= 0;
       
       if (isVisible) {
-        // Animate step 0 -> 1 -> 2 -> 3
+        // Animate step 0 -> 1 -> 2 -> 3 -> 4
         const interval = setInterval(() => {
           setChainStep((prev) => {
-            if (prev >= 3) {
+            if (prev >= 4) {
               clearInterval(interval);
-              return 3;
+              return 4;
             }
             return prev + 1;
           });
-        }, 600);
+        }, 500);
         
         window.removeEventListener("scroll", handleScroll);
       }
@@ -49,10 +49,10 @@ export default function ManifestoSection() {
 
             <div className="space-y-4 max-w-lg font-sans text-sm sm:text-base text-[#A8AAA4] font-light leading-relaxed">
               <p>
-                No platform lock-in. No proprietary portfolio configurations. No fake &quot;AI magic&quot; black boxes hosting your content.
+                No platform lock-in. No proprietary portfolio format. Your portfolio becomes source code you can inspect, modify, and own.
               </p>
               <p className="text-[#F3F0E8] font-normal">
-                Just a compiled, optimized static site package you fully own, modify, and host wherever you choose.
+                Build your portfolio, save your work, and ship the source to a GitHub repository you control.
               </p>
             </div>
           </div>
@@ -65,7 +65,7 @@ export default function ManifestoSection() {
 
             <div className="flex flex-col items-center gap-4 w-full max-w-[200px]">
               
-              {/* USER */}
+              {/* YOU */}
               <div 
                 className={`w-full py-2.5 border transition-all duration-300 ${
                   chainStep >= 0 
@@ -73,13 +73,13 @@ export default function ManifestoSection() {
                     : "border-[#2b3b4d]/40 text-gray-600"
                 }`}
               >
-                USER
+                YOU
               </div>
               <div className={`text-xs transition-colors ${chainStep >= 1 ? "text-[#E5A84B]" : "text-gray-700"}`}>
                 ↓
               </div>
 
-              {/* REPO */}
+              {/* PORTFOLIO */}
               <div 
                 className={`w-full py-2.5 border transition-all duration-300 ${
                   chainStep >= 1 
@@ -87,13 +87,13 @@ export default function ManifestoSection() {
                     : "border-[#2b3b4d]/40 text-gray-600"
                 }`}
               >
-                REPO
+                PORTFOLIO
               </div>
               <div className={`text-xs transition-colors ${chainStep >= 2 ? "text-[#E5A84B]" : "text-gray-700"}`}>
                 ↓
               </div>
 
-              {/* HOST */}
+              {/* SOURCE CODE */}
               <div 
                 className={`w-full py-2.5 border transition-all duration-300 ${
                   chainStep >= 2 
@@ -101,13 +101,13 @@ export default function ManifestoSection() {
                     : "border-[#2b3b4d]/40 text-gray-600"
                 }`}
               >
-                HOST
+                SOURCE CODE
               </div>
               <div className={`text-xs transition-colors ${chainStep >= 3 ? "text-[#E5A84B]" : "text-gray-700"}`}>
                 ↓
               </div>
 
-              {/* DOMAIN */}
+              {/* GITHUB */}
               <div 
                 className={`w-full py-2.5 border transition-all duration-300 ${
                   chainStep >= 3 
@@ -115,7 +115,21 @@ export default function ManifestoSection() {
                     : "border-[#2b3b4d]/40 text-gray-600"
                 }`}
               >
-                DOMAIN
+                GITHUB
+              </div>
+              <div className={`text-xs transition-colors ${chainStep >= 4 ? "text-[#E5A84B]" : "text-gray-700"}`}>
+                ↓
+              </div>
+
+              {/* DEPLOY */}
+              <div 
+                className={`w-full py-2.5 border transition-all duration-300 ${
+                  chainStep >= 4 
+                    ? "border-[#E5A84B] bg-[#E5A84B]/5 text-[#E5A84B] font-bold" 
+                    : "border-[#2b3b4d]/40 text-gray-600"
+                }`}
+              >
+                DEPLOY
               </div>
 
             </div>
