@@ -40,6 +40,11 @@ export default function Home() {
     <>
       <Navbar />
       <main className="flex-grow pt-16">
+        <div 
+          dangerouslySetInnerHTML={{ 
+            __html: "<!--\n  If you found this, you probably looked where others don't.\n  Good engineers inspect things.\n-->" 
+          }} 
+        />
         <div className="reveal-section">
           <HeroSection />
         </div>

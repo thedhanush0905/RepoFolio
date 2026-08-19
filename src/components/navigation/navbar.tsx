@@ -20,7 +20,27 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [easterEggOpen, setEasterEggOpen] = useState(false);
+  const clickTracker = useRef<{ count: number; lastTime: number }>({ count: 0, lastTime: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    const now = Date.now();
+    const tracker = clickTracker.current;
+    if (now - tracker.lastTime < 2000) {
+      tracker.count += 1;
+    } else {
+      tracker.count = 1;
+    }
+    tracker.lastTime = now;
+
+    if (tracker.count >= 5) {
+      e.preventDefault();
+      e.stopPropagation();
+      tracker.count = 0;
+      setEasterEggOpen(true);
+    }
+  };
 
   useEffect(() => {
     const isLight = document.documentElement.classList.contains("light");
@@ -130,7 +150,7 @@ export default function Navbar() {
       <nav className="fixed top-0 left-0 w-full z-50 bg-[#101820]/90 backdrop-blur-md border-b border-[#17212B] select-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo / Wordmark */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" onClick={handleLogoClick} className="flex items-center gap-2 group">
             <span className="font-mono text-lg font-bold tracking-tight text-[#F3F0E8] flex items-center gap-1.5">
               <Terminal className="w-5 h-5 text-[#E5A84B]" />
               REPOfolio
@@ -399,6 +419,163 @@ export default function Navbar() {
           </Link>
         </div>
       )}
+      <EasterEggModal isOpen={easterEggOpen} onClose={() => setEasterEggOpen(false)} />
     </>
+  );
+}
+
+interface EasterEggModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+function EasterEggModal({ isOpen, onClose }: EasterEggModalProps) {
+  const [lines, setLines] = useState<string[]>([]);
+  const [activeLine, setActiveLine] = useState("");
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
+  const script = [
+    "REPOfolio Terminal",
+    "",
+    "$ whoami",
+    "> curious developer",
+    "",
+    "$ cat /secret",
+    "> You found it.",
+    "",
+    "> Now go ship something."
+  ];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    modalRef.current?.focus();
+    
+    const origOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    let scriptIdx = 0;
+    let charIdx = 0;
+    let currentLine = "";
+    const typedLines: string[] = [];
+
+    const typeNextChar = () => {
+      if (scriptIdx >= script.length) {
+        return;
+      }
+
+      const targetText = script[scriptIdx];
+      if (charIdx < targetText.length) {
+        currentLine += targetText[charIdx];
+        setActiveLine(currentLine);
+        charIdx++;
+        setTimeout(typeNextChar, 25);
+      } else {
+        typedLines.push(currentLine);
+        setLines([...typedLines]);
+        setActiveLine("");
+        currentLine = "";
+        charIdx = 0;
+        scriptIdx++;
+        const delay = targetText.startsWith("$") || targetText.length === 0 ? 300 : 100;
+        setTimeout(typeNextChar, delay);
+      }
+    };
+
+    setLines([]);
+    setActiveLine("");
+    const timeoutId = setTimeout(typeNextChar, 400);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = origOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      clearTimeout(timeoutId);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="easter-egg-title"
+    >
+      <div 
+        ref={modalRef}
+        tabIndex={-1}
+        className="w-full max-w-lg bg-[#0B1117] border border-[#2b3b4d]/60 rounded-sm shadow-2xl p-6 font-mono text-xs text-[#A8AAA4] relative flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200 focus:outline-none"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Terminal Header Bar */}
+        <div className="flex justify-between items-center border-b border-[#2b3b4d]/40 pb-3">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-500" />
+            <span className="w-2 h-2 rounded-full bg-yellow-500" />
+            <span className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-[10px] text-gray-500 uppercase ml-2" id="easter-egg-title">
+              REPOfolio Shell v0.1.0
+            </span>
+          </div>
+          <button
+            ref={closeBtnRef}
+            onClick={onClose}
+            className="text-gray-500 hover:text-white transition-colors cursor-pointer text-[10px] uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#E5A84B]"
+            aria-label="Close terminal dialog"
+          >
+            [CLOSE]
+          </button>
+        </div>
+
+        {/* Terminal Text Screen */}
+        <div className="flex-1 min-h-[180px] space-y-1.5 overflow-y-auto leading-relaxed select-text text-left">
+          {lines.map((l, i) => (
+            <div 
+              key={i} 
+              className={
+                l.startsWith("$") 
+                  ? "text-[#F3F0E8] font-bold" 
+                  : l.startsWith(">") 
+                  ? "text-[#E5A84B]" 
+                  : i === 0 
+                  ? "text-[#F3F0E8] font-semibold text-sm mb-2" 
+                  : "text-gray-500"
+              }
+            >
+              {l}
+            </div>
+          ))}
+          {activeLine && (
+            <div 
+              className={
+                activeLine.startsWith("$") 
+                  ? "text-[#F3F0E8] font-bold" 
+                  : activeLine.startsWith(">") 
+                  ? "text-[#E5A84B]" 
+                  : lines.length === 0 
+                  ? "text-[#F3F0E8] font-semibold text-sm mb-2" 
+                  : "text-gray-500"
+              }
+            >
+              {activeLine}
+              <span className="w-1.5 h-3 bg-[#E5A84B] ml-0.5 animate-pulse inline-block" />
+            </div>
+          )}
+          {!activeLine && lines.length < script.length && (
+            <span className="w-1.5 h-3 bg-[#E5A84B] animate-pulse inline-block" />
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
