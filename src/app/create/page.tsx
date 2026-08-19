@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PortfolioData, DHANUSH_MOCK_DATA, MAYA_CHEN_DATA, ARJUN_RAO_DATA, SARAH_WILLIAMS_DATA, NOAH_KIM_DATA } from "@/lib/constants";
@@ -62,6 +62,17 @@ export default function CreatePortfolioPage() {
 
   // Typed PortfolioData as single source of truth
   const [portfolioData, setPortfolioData] = useState<PortfolioData>(DHANUSH_MOCK_DATA);
+
+  const [easterEggActive, setEasterEggActive] = useState(false);
+  const [isShippedText, setIsShippedText] = useState(false);
+
+  const handleDoubleClickGlobe = () => {
+    setIsShippedText(true);
+    setEasterEggActive(true);
+    setTimeout(() => {
+      setIsShippedText(false);
+    }, 3000);
+  };
 
   // Authenticated GitHub user session states
   const [githubUser, setGithubUser] = useState<{ login: string; avatarUrl?: string } | null>(null);
@@ -1103,9 +1114,16 @@ export default function CreatePortfolioPage() {
               {/* Final Deployed state overlay dashboard */}
               {buildState === "deployed" && (
                 <div className="absolute top-4 right-4 bg-[#0B1117]/95 border border-[#E5A84B]/40 p-4 max-w-xs font-mono text-[11px] text-[#A8AAA4] rounded-sm shadow-xl z-10">
-                  <div className="flex items-center gap-2 mb-2 text-[#E5A84B] font-bold">
+                  <div 
+                    className="flex items-center gap-2 mb-2 text-[#E5A84B] font-bold cursor-pointer select-none"
+                    onDoubleClick={handleDoubleClickGlobe}
+                  >
                     <Globe className="w-4 h-4" />
-                    <span>{isUpdateState ? "✓ PORTFOLIO UPDATED" : "✓ PORTFOLIO GENERATED"}</span>
+                    <span>
+                      {isShippedText 
+                        ? "✓ PORTFOLIO SHIPPED" 
+                        : (isUpdateState ? "✓ PORTFOLIO UPDATED" : "✓ PORTFOLIO GENERATED")}
+                    </span>
                   </div>
                   <p className="text-[10px] mb-2 leading-relaxed">
                     {isUpdateState
@@ -1143,6 +1161,172 @@ export default function CreatePortfolioPage() {
 
       </main>
 
+      <EasterEggModal isOpen={easterEggActive} onClose={() => setEasterEggActive(false)} />
+    </div>
+  );
+}
+
+interface EasterEggModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+function EasterEggModal({ isOpen, onClose }: EasterEggModalProps) {
+  const [lines, setLines] = useState<string[]>([]);
+  const [activeLine, setActiveLine] = useState("");
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
+  const script = [
+    "REPOFOLIO SHELL v0.1.0",
+    "",
+    "$ repofolio status",
+    "PORTFOLIO ............. READY",
+    "SOURCE CODE ........... GENERATED",
+    "REPOSITORY ............ CONNECTED",
+    "DEPLOYMENT ............ LIVE",
+    "",
+    "$ git status",
+    "✓ nothing to commit",
+    "",
+    "$ ship",
+    "",
+    "> your portfolio escaped localhost."
+  ];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    modalRef.current?.focus();
+    
+    const origOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    let scriptIdx = 0;
+    let charIdx = 0;
+    let currentLine = "";
+    const typedLines: string[] = [];
+
+    const typeNextChar = () => {
+      if (scriptIdx >= script.length) {
+        return;
+      }
+
+      const targetText = script[scriptIdx];
+      if (charIdx < targetText.length) {
+        currentLine += targetText[charIdx];
+        setActiveLine(currentLine);
+        charIdx++;
+        setTimeout(typeNextChar, 25);
+      } else {
+        typedLines.push(currentLine);
+        setLines([...typedLines]);
+        setActiveLine("");
+        currentLine = "";
+        charIdx = 0;
+        scriptIdx++;
+        const delay = targetText.startsWith("$") || targetText.length === 0 ? 300 : 100;
+        setTimeout(typeNextChar, delay);
+      }
+    };
+
+    setLines([]);
+    setActiveLine("");
+    const timeoutId = setTimeout(typeNextChar, 400);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = origOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      clearTimeout(timeoutId);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="easter-egg-title"
+    >
+      <div 
+        ref={modalRef}
+        tabIndex={-1}
+        className="w-full max-w-lg bg-[#0B1117] border border-[#2b3b4d]/60 rounded-sm shadow-2xl p-6 font-mono text-xs text-[#A8AAA4] relative flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200 focus:outline-none"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Terminal Header Bar */}
+        <div className="flex justify-between items-center border-b border-[#2b3b4d]/40 pb-3">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-500" />
+            <span className="w-2 h-2 rounded-full bg-yellow-500" />
+            <span className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-[10px] text-gray-500 uppercase ml-2" id="easter-egg-title">
+              REPOFOLIO SHELL v0.1.0
+            </span>
+          </div>
+          <button
+            ref={closeBtnRef}
+            onClick={onClose}
+            className="text-gray-500 hover:text-white transition-colors cursor-pointer text-[10px] uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#E5A84B]"
+            aria-label="Close terminal dialog"
+          >
+            [CLOSE]
+          </button>
+        </div>
+
+        {/* Terminal Text Screen */}
+        <div className="flex-1 min-h-[180px] space-y-1.5 overflow-y-auto leading-relaxed select-text text-left">
+          {lines.map((l, i) => (
+            <div 
+              key={i} 
+              className={
+                l.startsWith("$") 
+                  ? "text-[#F3F0E8] font-bold" 
+                  : l.startsWith(">") 
+                  ? "text-[#E5A84B]" 
+                  : l.startsWith("✓") 
+                  ? "text-green-400" 
+                  : i === 0 
+                  ? "text-[#F3F0E8] font-semibold text-sm mb-2" 
+                  : "text-gray-500"
+              }
+            >
+              {l}
+            </div>
+          ))}
+          {activeLine && (
+            <div 
+              className={
+                activeLine.startsWith("$") 
+                  ? "text-[#F3F0E8] font-bold" 
+                  : activeLine.startsWith(">") 
+                  ? "text-[#E5A84B]" 
+                  : activeLine.startsWith("✓") 
+                  ? "text-green-400" 
+                  : lines.length === 0 
+                  ? "text-[#F3F0E8] font-semibold text-sm mb-2" 
+                  : "text-gray-500"
+              }
+            >
+              {activeLine}
+              <span className="w-1.5 h-3 bg-[#E5A84B] ml-0.5 animate-pulse inline-block" />
+            </div>
+          )}
+          {!activeLine && lines.length < script.length && (
+            <span className="w-1.5 h-3 bg-[#E5A84B] animate-pulse inline-block" />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
