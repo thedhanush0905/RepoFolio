@@ -1,6 +1,7 @@
 import React from "react";
 import Navbar from "@/components/navigation/navbar";
 import HeroSection from "@/components/hero/hero-section";
+import SavedDrafts from "@/components/portfolio/saved-drafts";
 import WorkflowSection from "@/components/workflow/workflow-section";
 import PreviewSection from "@/components/live-preview/preview-section";
 import RepositorySection from "@/components/repository/repository-section";
@@ -14,6 +15,7 @@ export default function Home() {
       <Navbar />
       <main className="flex-grow pt-16">
         <HeroSection />
+        <SavedDrafts />
         <WorkflowSection />
         <PreviewSection />
         <RepositorySection />

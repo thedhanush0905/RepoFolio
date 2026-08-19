@@ -1,14 +1,4 @@
 import mongoose from "mongoose";
-import dns from "dns";
-
-// DNS workaround for Node.js v22.11+ / c-ares 1.34.6 Windows regression
-if (process.env.NODE_ENV === "development") {
-  try {
-    dns.setServers(["8.8.8.8", "1.1.1.1"]);
-  } catch (err) {
-    console.warn("Failed to set dev DNS servers:", err);
-  }
-}
 
 const MONGODB_URI = process.env.MONGODB_URI;
 

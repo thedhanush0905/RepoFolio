@@ -1,14 +1,25 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, X, Terminal } from "lucide-react";
 
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  githubConnected: boolean;
+  githubUsername?: string;
+}
+
 export default function Navbar() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<{ name: string } | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -21,10 +32,34 @@ export default function Navbar() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [dropdownOpen]);
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
       setUser(null);
+      setDropdownOpen(false);
+      setMobileMenuOpen(false);
       router.push("/");
       router.refresh();
     } catch {}
@@ -32,10 +67,24 @@ export default function Navbar() {
 
   const handleScroll = (id: string) => {
     setMobileMenuOpen(false);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+    setDropdownOpen(false);
+    if (window.location.pathname === "/") {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      router.push(`/#${id}`);
     }
+  };
+
+  const getInitials = (name?: string) => {
+    if (!name) return "RP";
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
   };
 
   return (
@@ -67,6 +116,14 @@ export default function Navbar() {
             >
               Preview
             </button>
+            {user && (
+              <button
+                onClick={() => handleScroll("saved-drafts")}
+                className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono cursor-pointer bg-transparent border-0"
+              >
+                Saved Drafts
+              </button>
+            )}
             <a
               href="https://github.com"
               target="_blank"
@@ -79,20 +136,74 @@ export default function Navbar() {
             <span className="h-4 w-[1px] bg-[#17212B]" />
 
             {user ? (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono"
-                >
-                  Dashboard
-                </Link>
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={handleLogout}
-                  className="text-[#A8AAA4] hover:text-red-400 transition-colors text-sm font-mono cursor-pointer bg-transparent border-0"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono cursor-pointer bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-[#E5A84B]/40 px-1 py-1 rounded-sm"
+                  aria-expanded={dropdownOpen}
+                  aria-haspopup="true"
                 >
-                  Sign out
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name}
+                      className="w-7 h-7 rounded-full object-cover border border-[#2b3b4d]/40"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-[#17212B] border border-[#2b3b4d]/40 flex items-center justify-center text-[10px] font-bold text-[#E5A84B] font-mono">
+                      {getInitials(user.name)}
+                    </div>
+                  )}
+                  <span className="max-w-[120px] truncate hidden lg:inline">{user.name}</span>
+                  <span className="text-[10px] text-gray-500">▼</span>
                 </button>
-              </>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 rounded-sm bg-[#0B1117] border border-[#17212B] shadow-xl z-50 py-2 divide-y divide-[#17212B]/60 animate-in fade-in slide-in-from-top-1 duration-100">
+                    <div className="px-4 py-2.5 flex items-center gap-3">
+                      {user.avatarUrl ? (
+                        <img
+                          src={user.avatarUrl}
+                          alt={user.name}
+                          className="w-9 h-9 rounded-full object-cover border border-[#2b3b4d]/20"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-[#17212B] border border-[#2b3b4d]/20 flex items-center justify-center text-xs font-bold text-[#E5A84B] font-mono">
+                          {getInitials(user.name)}
+                        </div>
+                      )}
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-[#F3F0E8] truncate font-mono">{user.name}</span>
+                        <span className="text-[10px] text-gray-500 truncate font-mono">{user.email}</span>
+                      </div>
+                    </div>
+
+                    <div className="py-1">
+                      <button
+                        onClick={() => handleScroll("saved-drafts")}
+                        className="w-full text-left px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors cursor-pointer bg-transparent border-0"
+                      >
+                        Saved Drafts
+                      </button>
+                      <a
+                        href="/api/auth/github"
+                        className="block px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors"
+                      >
+                        Connect GitHub
+                      </a>
+                    </div>
+
+                    <div className="py-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-xs font-mono text-gray-400 hover:text-red-400 hover:bg-[#17212B]/40 transition-colors cursor-pointer bg-transparent border-0"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link
                 href="/login"
@@ -102,7 +213,7 @@ export default function Navbar() {
               </Link>
             )}
             <Link
-              href={user ? "/dashboard" : "/create"}
+              href="/create"
               className="bg-[#E5A84B] hover:bg-[#E5A84B]/90 text-[#0B1117] font-mono text-xs px-4 py-2 font-bold tracking-wide transition-all border border-transparent hover:border-[#E5A84B]/20 cursor-pointer"
             >
               Create portfolio
@@ -110,7 +221,63 @@ export default function Navbar() {
           </div>
 
           {/* Mobile hamburger button */}
-          <div className="flex md:hidden">
+          <div className="flex md:hidden items-center gap-3">
+            {user && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-1 text-[#A8AAA4] hover:text-[#F3F0E8] transition-colors text-sm font-mono cursor-pointer bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-[#E5A84B]/40 p-1 rounded-sm"
+                  aria-expanded={dropdownOpen}
+                  aria-haspopup="true"
+                >
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name}
+                      className="w-7 h-7 rounded-full object-cover border border-[#2b3b4d]/40"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-[#17212B] border border-[#2b3b4d]/40 flex items-center justify-center text-[10px] font-bold text-[#E5A84B] font-mono">
+                      {getInitials(user.name)}
+                    </div>
+                  )}
+                  <span className="text-[10px] text-gray-500">▼</span>
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-sm bg-[#0B1117] border border-[#17212B] shadow-xl z-50 py-2 divide-y divide-[#17212B]/60 animate-in fade-in slide-in-from-top-1 duration-100">
+                    <div className="px-4 py-2 flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-[#F3F0E8] truncate font-mono">{user.name}</span>
+                      <span className="text-[10px] text-gray-500 truncate font-mono">{user.email}</span>
+                    </div>
+
+                    <div className="py-1">
+                      <button
+                        onClick={() => handleScroll("saved-drafts")}
+                        className="w-full text-left px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors cursor-pointer bg-transparent border-0"
+                      >
+                        Saved Drafts
+                      </button>
+                      <a
+                        href="/api/auth/github"
+                        className="block px-4 py-2 text-xs font-mono text-[#A8AAA4] hover:text-[#F3F0E8] hover:bg-[#17212B]/40 transition-colors"
+                      >
+                        Connect GitHub
+                      </a>
+                    </div>
+
+                    <div className="py-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-xs font-mono text-gray-400 hover:text-red-400 hover:bg-[#17212B]/40 transition-colors cursor-pointer bg-transparent border-0"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-[#A8AAA4] hover:text-[#F3F0E8] p-2 bg-transparent border-0"
@@ -137,6 +304,14 @@ export default function Navbar() {
           >
             Preview
           </button>
+          {user && (
+            <button
+              onClick={() => handleScroll("saved-drafts")}
+              className="text-left text-lg font-mono text-[#A8AAA4] hover:text-[#F3F0E8] bg-transparent border-0"
+            >
+              Saved Drafts
+            </button>
+          )}
           <a
             href="https://github.com"
             target="_blank"
@@ -146,26 +321,7 @@ export default function Navbar() {
             GitHub
           </a>
           <hr className="border-[#17212B]" />
-          {user ? (
-            <>
-              <Link
-                href="/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-left text-lg font-mono text-[#A8AAA4] hover:text-[#F3F0E8]"
-              >
-                Dashboard
-              </Link>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleLogout();
-                }}
-                className="text-left text-lg font-mono text-[#A8AAA4] hover:text-red-400 bg-transparent border-0"
-              >
-                Sign out
-              </button>
-            </>
-          ) : (
+          {!user && (
             <Link
               href="/login"
               onClick={() => setMobileMenuOpen(false)}
@@ -175,7 +331,7 @@ export default function Navbar() {
             </Link>
           )}
           <Link
-            href={user ? "/dashboard" : "/create"}
+            href="/create"
             onClick={() => setMobileMenuOpen(false)}
             className="bg-[#E5A84B] hover:bg-[#E5A84B]/90 text-[#0B1117] font-mono text-center font-bold py-3 tracking-wide"
           >
